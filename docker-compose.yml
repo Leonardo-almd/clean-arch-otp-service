@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - otp-network
+
+  app1:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RATE_LIMIT_WINDOW=1
+      - RATE_LIMIT_MAX=5
+      - PORT=3000
+    depends_on:
+      - redis
+    networks:
+      - otp-network
+
+  app2:
+    build: .
+    ports:
+      - "3002:3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RATE_LIMIT_WINDOW=1
+      - RATE_LIMIT_MAX=5
+      - PORT=3000
+    depends_on:
+      - redis
+    networks:
+      - otp-network
+
+  app3:
+    build: .
+    ports:
+      - "3003:3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RATE_LIMIT_WINDOW=1
+      - RATE_LIMIT_MAX=5
+      - PORT=3000
+    depends_on:
+      - redis
+    networks:
+      - otp-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app1
+      - app2
+      - app3
+    networks:
+      - otp-network
+
+networks:
+  otp-network:
+    driver: bridge
+
+volumes:
+  redis-data:
