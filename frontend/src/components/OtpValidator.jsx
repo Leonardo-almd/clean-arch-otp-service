@@ -8,6 +8,25 @@ const OtpValidator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const formatValidationErrors = (errors) => {
+    if (!errors || typeof errors !== 'object') {
+      return 'Erro de validação nos dados enviados.';
+    }
+
+    const fieldLabels = {
+      userId: 'ID do Usuário',
+      token: 'Token OTP'
+    };
+
+    const errorMessages = Object.entries(errors).map(([field, messages]) => {
+      const fieldLabel = fieldLabels[field] || field;
+      const messageList = Array.isArray(messages) ? messages : [messages];
+      return `${fieldLabel}: ${messageList.join(', ')}`;
+    });
+
+    return errorMessages.join('\n');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,7 +37,8 @@ const OtpValidator = () => {
       const validationResult = await validateOtp(token, userId);
       setResult(validationResult);
     } catch (err) {
-      setError('Erro ao validar token OTP. Tente novamente.');
+      console.log(err?.errors);
+      setError(err?.errors ? formatValidationErrors(err.errors) : 'Erro ao validar token OTP. Tente novamente.');
     } finally {
       setLoading(false);
     }

@@ -7,7 +7,10 @@ export class RedisDbConnection implements DbConnection {
   private logger = new Logger('RedisDbConnection');
 
   constructor(host: string = 'localhost', port: number = 6379) {
-    const isProduction: boolean = host !== 'localhost';
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                          process.env.REDIS_HOST !== 'localhost' && 
+                          process.env.REDIS_HOST !== '127.0.0.1' &&
+                          process.env.REDIS_HOST !== 'redis';
     const scheme = isProduction ? 'rediss' : 'redis';
     this.client = createClient({
       url: `${scheme}://${host}:${port}`,

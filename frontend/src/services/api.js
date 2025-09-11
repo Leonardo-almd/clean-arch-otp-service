@@ -11,7 +11,7 @@ export const generateOtp = async (userId, expirationMinutes = 5) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao gerar OTP:', error);
-    throw error;
+    throw error?.response?.data ? error.response.data : error;
   }
 };
 
@@ -24,6 +24,6 @@ export const validateOtp = async (token, userId) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao validar OTP:', error);
-    throw error;
+    throw error?.response?.data ? error.response.data : error;
   }
 };
