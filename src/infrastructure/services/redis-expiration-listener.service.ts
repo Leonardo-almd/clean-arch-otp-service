@@ -17,51 +17,58 @@ export class RedisExpirationListener {
 
   async start(): Promise<void> {
     if (this.isRunning) return;
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                          process.env.REDIS_HOST !== 'localhost' && 
+                          process.env.REDIS_HOST !== '127.0.0.1' &&
+                          process.env.REDIS_HOST !== 'redis';
 
-    try {
-      this.subscriber = this.dbConnection.getClient().duplicate();
-      
-      this.subscriber.on('error', (err: Error) => {
-        this.logger.error(`Redis subscriber error: ${err.message}`);
-      });
-
-      await this.subscriber.connect();
-      
-      this.configClient = this.dbConnection.getClient().duplicate();
-      await this.configClient.connect();
-      await this.configClient.configSet('notify-keyspace-events', 'Ex');
-      await this.configClient.disconnect();
-      
-      this.logger.info('Redis configured for keyspace notifications');
-
-      await this.subscriber.pSubscribe('__keyevent@0__:expired', async (message: string) => {
-        if (message.startsWith('user:') && !message.includes(':audits')) {
-          const userId = message.split(':')[1];
-          this.logger.info(`Token expired event received for user ${userId}`);
-          
-          try {
+    if(!isProduction){
+      try {
+        this.subscriber = this.dbConnection.getClient().duplicate();
+        
+        this.subscriber.on('error', (err: Error) => {
+          this.logger.error(`Redis subscriber error: ${err.message}`);
+        });
+  
+        await this.subscriber.connect();
+        
+        this.configClient = this.dbConnection.getClient().duplicate();
+        await this.configClient.connect();
+        await this.configClient.configSet('notify-keyspace-events', 'Ex');
+        await this.configClient.disconnect();
+        
+        this.logger.info('Redis configured for keyspace notifications');
+  
+        await this.subscriber.pSubscribe('__keyevent@0__:expired', async (message: string) => {
+          if (message.startsWith('user:') && !message.includes(':audits')) {
+            const userId = message.split(':')[1];
+            this.logger.info(`Token expired event received for user ${userId}`);
             
-            const audit = new TokenAudit({
-              userId,
-              tokenReference: `expired:${userId}:${Date.now()}`,
-              expiresAt: new Date(),
-              status: 'EXPIRED'
-            });
-            
-            await this.tokenAuditRepository.save(audit);
-            this.logger.info(`Audit record created for expired token of user ${userId}`);
-          } catch (error: any) {
-            this.logger.error(`Failed to create audit record for expired token: ${error.message}`);
+            try {
+              
+              const audit = new TokenAudit({
+                userId,
+                tokenReference: `expired:${userId}:${Date.now()}`,
+                expiresAt: new Date(),
+                status: 'EXPIRED'
+              });
+              
+              await this.tokenAuditRepository.save(audit);
+              this.logger.info(`Audit record created for expired token of user ${userId}`);
+            } catch (error: any) {
+              this.logger.error(`Failed to create audit record for expired token: ${error.message}`);
+            }
           }
-        }
-      });
-      
-      this.isRunning = true;
-      this.logger.info('Redis expiration listener started successfully');
-    } catch (error: any) {
-      this.logger.error(`Failed to start Redis expiration listener: ${error.message}`);
-      await this.stop();
-      throw error;
+        });
+        
+        this.isRunning = true;
+        this.logger.info('Redis expiration listener started successfully');
+      } catch (error: any) {
+        this.logger.error(`Failed to start Redis expiration listener: ${error.message}`);
+        await this.stop();
+        throw error;
+      }
+
     }
   }
 

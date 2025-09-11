@@ -24,3 +24,7 @@ dump.rdb
 
 # Test coverage
 coverage/
+
+# frontend
+frontend/build/
+frontend/node_modules/
