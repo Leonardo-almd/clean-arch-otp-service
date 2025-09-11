@@ -1,6 +1,6 @@
 # Clean Architecture OTP Service
 
-Um serviço de tokens OTP (One-Time Password) construído seguindo os princípios de Clean Architecture. Este serviço fornece uma API para geração e validação de tokens OTP com recursos de limitação de taxa, auditoria e alta disponibilidade.
+Um serviço de tokens OTP (One-Time Password) construído seguindo os princípios de Clean Architecture. Este serviço fornece uma API para geração e validação de tokens OTP com recursos de limitação de taxa, auditoria e interface web para interação.
 
 ## 📋 Índice
 
@@ -14,6 +14,7 @@ Um serviço de tokens OTP (One-Time Password) construído seguindo os princípio
 - [API Documentation](#api-documentation)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Recursos](#recursos)
+- [Segurança](#segurança)
 - [Licença](#licença)
 
 ## 🔍 Visão Geral
@@ -26,7 +27,7 @@ O Clean Architecture OTP Service é uma aplicação que permite a geração e va
 - Validação de tokens OTP
 - Auditoria de tokens
 - Limitação de taxa para evitar abusos
-- Alta disponibilidade com múltiplas instâncias e balanceamento de carga
+- Interface web para interação com o serviço
 - Documentação da API com Swagger
 
 ## 🏛️ Arquitetura
@@ -58,14 +59,22 @@ O projeto segue os princípios da Clean Architecture, organizando o código em c
 
 ## 🛠️ Tecnologias
 
-- **Node.js**: Ambiente de execução
-- **TypeScript**: Linguagem de programação
-- **Express**: Framework web
-- **Redis**: Armazenamento de dados e gerenciamento de sessão
-- **Docker**: Containerização
-- **Nginx**: Balanceamento de carga
-- **Jest**: Framework de testes
-- **Swagger**: Documentação da API
+- **Backend**:
+  - **Node.js**: Ambiente de execução
+  - **TypeScript**: Linguagem de programação
+  - **Express**: Framework web
+  - **Redis**: Armazenamento de dados e gerenciamento de sessão
+  - **Jest**: Framework de testes
+  - **Swagger**: Documentação da API
+
+- **Frontend**:
+  - **React**: Biblioteca para construção de interfaces
+  - **Axios**: Cliente HTTP para comunicação com a API
+
+- **DevOps**:
+  - **Docker**: Containerização
+  - **Trivy**: Análise de vulnerabilidades
+  - **AWS ECR/ECS**: Serviços de container na nuvem (preparado para deploy)
 
 ## 📋 Pré-requisitos
 
@@ -110,11 +119,13 @@ docker compose up -d
 ```
 
 Isso iniciará:
-- 3 instâncias da aplicação
+- 1 instância do backend
 - 1 instância do Redis
-- 1 instância do Nginx para balanceamento de carga
+- 1 instância do frontend React
 
-Acesse a aplicação em: http://localhost:8080/api
+Acesse a aplicação em:
+- Frontend: http://localhost:3000
+- API: http://localhost:3001/api
 
 ### Variáveis de Ambiente
 
@@ -125,6 +136,7 @@ Acesse a aplicação em: http://localhost:8080/api
 | REDIS_PORT | Porta do Redis | 6379 |
 | RATE_LIMIT_WINDOW | Janela de tempo para limitação de taxa (minutos) | 1 |
 | RATE_LIMIT_MAX | Número máximo de requisições por janela | 5 |
+| REACT_APP_API_URL | URL da API para o frontend | http://localhost:3001 |
 
 ## 🧪 Testes
 
@@ -155,7 +167,7 @@ npm run test:coverage
 A documentação da API está disponível via Swagger UI:
 
 - **Local**: http://localhost:3000/api/docs
-- **Docker**: http://localhost:8080/api/docs
+- **Docker**: http://localhost:3001/api/docs
 
 ### Endpoints Principais
 
@@ -239,6 +251,14 @@ src/
 │   ├── docs/             # Documentação Swagger
 │   └── http/             # Controladores, rotas e middlewares HTTP
 └── utils/                # Utilitários
+frontend/             # Aplicação React
+├── public/           # Arquivos estáticos
+├── src/              # Código fonte do frontend
+│   ├── components/   # Componentes React
+│   └── services/     # Serviços para comunicação com a API
+├── Dockerfile        # Configuração Docker para o frontend
+└── package.json      # Dependências do frontend
+docker-compose.yml    # Configuração Docker Compose
 ```
 
 ## 🌟 Recursos
@@ -247,8 +267,22 @@ src/
 - **Validação de Tokens**: Verificação da validade dos tokens
 - **Auditoria**: Registro do histórico de tokens
 - **Limitação de Taxa**: Proteção contra abusos
-- **Alta Disponibilidade**: Múltiplas instâncias com balanceamento de carga
+- **Interface Web**: Interface amigável para interação com o serviço
 - **Documentação Swagger**: Documentação interativa da API
+
+## 🔒 Segurança
+
+O projeto foi analisado com a ferramenta Trivy para identificar possíveis vulnerabilidades nas imagens Docker. Esta análise ajuda a garantir que as imagens utilizadas estejam livres de vulnerabilidades conhecidas e seguindo as melhores práticas de segurança.
+
+Para executar uma análise de segurança com Trivy:
+
+```bash
+# Analisar a imagem do backend
+trivy image clean-arch-opt-service-backend
+
+# Analisar a imagem do frontend
+trivy image clean-arch-opt-service-frontend
+```
 
 ## 📄 Licença
 
